@@ -1,0 +1,183 @@
+<html ng-app="listaTelefonica">
+<head>
+    <!-- Usado quando não há 'content type no response' para interpretar acentos e outros símbolos-->
+    <meta charset="utf-8">
+
+    <title>Lista Telefonica</title>
+
+    <!--importa boostrap-->
+    <link rel="stylesheet" type="text/css" href="lib/bootstrap/bootstrap.css">
+    
+    <!--ajusta propriedades do bootstrap-->
+    <style>
+        .jumbotron {
+            margin-top: 20px;
+            margin-right: auto;
+            margin-left: auto;
+            text-align: center;
+            width: 600px;
+        }
+        .table {
+            margin-top: 20px;
+        }
+        .form-control {
+            margin-top: 5px;
+        }
+        .btn {
+            margin-top: 5px;
+        }
+        .selecionado {
+            background: yellow;
+        }
+        h3 {
+            margin-bottom: 30px;
+        }
+        hr {
+            border-color: #999;
+        }
+    </style>
+
+    <!--importa angular-->
+    <script src="lib/angular/angular.js"></script>
+            <!--i18n, fonte: https://github.com/angular/angular.js/tree/master/src/ngLocale -->
+    <script src="lib/angular/angular-locale_pt-br.js"></script>
+            <!--validações -->
+    <script src="lib/angular/angular-messages.js"></script>
+
+    <script>
+        angular.module("listaTelefonica", ["ngMessages"]);
+        angular.module("listaTelefonica").controller("listaTelefonicaCtrl", function($scope) {
+
+            //definindo atributos do escopo desta controller
+            $scope.appName="Lista Telefonica";
+            $scope.contatos= [
+                {nome:"Pedro", telefone:"9999-9999", data: new Date(), operadora: {nome:"Oi", codigo:14, categoria:"Celular"}, cor:"blue"},
+                {nome:"Ana", telefone:"8888-8888", data: new Date(), operadora: {nome:"Vivo", codigo:15, categoria:"Celular"}, cor:"yellow"},
+                {nome:"Maria", telefone:"7777-7777", data: new Date(), operadora: {nome:"Tim", codigo:41, categoria:"Celular"}, cor:"red"}];
+
+            $scope.operadoras = [   {nome:"Oi", codigo:14, categoria:"Celular", preco:2},
+                                    {nome:"Vivo", codigo:15, categoria:"Celular", preco:1},
+                                    {nome:"Tim", codigo:41, categoria:"Celular", preco:3},
+                                    {nome:"GVT", codigo:25, categoria:"Fixo", preco:1},
+                                    {nome:"Embratel", codigo:21, categoria:"Fixo", preco:2}];
+
+            $scope.adicionarContato = function(contato) {
+                console.log("Adicionando " + contato.nome);
+                //MANTRA 1 (a evitar): Nunca ler $scope dentro da controller. Só escrever.
+                //$scope.contatos.push({nome: $scope.nome, telefone: $scope.telefone});
+                $scope.contatos.push(angular.copy(contato));
+                delete $scope.contato;
+
+                //após adicionar um contato, queremos que a validação do form volte a ficar 'virgem'
+                $scope.contatoForm.$setPristine();
+            };
+            $scope.apagarContatos = function(contatos) {
+                $scope.contatos = contatos.filter(function(contato) {
+                    if (!contato.selecionado) return contato;
+                });
+            };
+            $scope.isContatoSelecionado = function(contatos) {
+                return contatos.some(function(contato) {
+                    return contato.selecionado;
+                });
+            };
+            $scope.ordenarPor = function(campo) {
+                $scope.criterioDeOrdenacao = campo;
+                $scope.direcaoDaOrdenacao = !$scope.direcaoDaOrdenacao;
+            };
+        });
+    </script>
+
+</head>
+
+<!-- define o body como sendo toda a view -->
+<body ng-controller="listaTelefonicaCtrl">
+
+    <div class="jumbotron">
+
+        <!-- ng-bind atrela um atributo do scope a um elemento da view-->
+        <!--h4 ng-bind="app"></h4-->
+        <!--Tb pode ser exibido como abaixo-->
+        <h3>{{appName}}</h3>
+
+        <input class="form-control" type="text" placeholder="O que você está buscando?"
+            ng-model="criterioDeBusca">
+
+        <table class="table" ng-show="contatos.length > 0">
+            <tr>
+                <th></th>
+                <th><a href="" ng-click="ordenarPor('nome')">Nome</a></th>
+                <th><a href="" ng-click="ordenarPor('telefone')">Telefone</a></th>
+                <th>Operadora</th>
+                <th>Data</th>
+                <th></th>
+            </tr>
+
+            <!-- diretiva ng-repeat instancia um template para cada item de uma coleção -->
+            <tr ng-class="{selecionado: contato.selecionado}"
+
+                ng-repeat="contato in contatos | filter:criterioDeBusca | orderBy:criterioDeOrdenacao:direcaoDaOrdenacao">
+                <!-- filtrando somente pelo nome filter:{nome: criterioDeBusca}"> -->
+                <!-- orderBy tem 3 parâmetros: a entrada do pipe, o criterio de ordenação, a direção da ordenação -->
+
+                    <td><input type="checkbox" ng-model="contato.selecionado"/></td>
+                    <td>{{contato.nome | uppercase}}</td>
+                    <td>{{contato.telefone}}</td>
+                    <td>{{contato.operadora.nome | lowercase}}</td>
+                    <td>{{contato.data | date:"dd/MM/yyyy HH:mm"}}</td>
+            </tr>
+        </table>
+        <hr>
+
+        <!-- usando a tag form desta maneira, será criado um objeto de validação 'contatoForm' no $scope onde teremos acesso aos valores das diretivas de validação ng-required, ng-min-length, etc, dos campos do form -->
+        <form name="contatoForm">
+            <!-- diretiva ng-model atualiza view->propriedade do scope-->
+            <input  class="form-control" type="text" placeholder="Nome"
+                    ng-model="contato.nome" name="nome" ng-required="true" ng-minlength="3">
+            
+            <input  class="form-control" type="text" placeholder="Telefone"
+                    ng-model="contato.telefone" name="telefone" ng-required="true" ng-pattern="/^\d{4,5}-\d{4}$/">
+            
+            <select class="form-control"
+                ng-model="contato.operadora"
+                ng-options="operadora.nome + ' (' + (operadora.preco | currency) + ')' for operadora in operadoras | orderBy:'nome'">
+                <option value="">Seleciona uma operadora</option>
+            </select>
+        </form>
+
+        <!-- Mensagens de validação para o campo nome -->
+        <div    ng-messages="contatoForm.nome.$error"
+                ng-show='contatoForm.nome.$dirty'>
+            
+            <div class="alert alert-danger" ng-message="required">
+                Por favor, preencha o campo nome.
+            </div>
+            <div class="alert alert-danger" ng-message="minlength">
+                O nome deve ter no mínimo 3 caracteres.
+            </div>
+        </div>
+        <!-- Mensagens de validação para o campo telefone -->
+        <div    ng-messages="contatoForm.telefone.$error"
+                ng-show='contatoForm.telefone.$dirty'>
+
+            <div class="alert alert-danger" ng-message="required">
+                Por favor, preencha o campo telefone.
+            </div>
+            <div class="alert alert-danger" ng-message="pattern">
+                O telefone deve ter o formato de DDDDD-DDDD.
+            </div>
+        </div>
+        
+ 
+        <!-- botão com bind de enabled e action de click -->
+        <button class="btn btn-primary btn-block"
+                ng-click="adicionarContato(contato)" ng-disabled="contatoForm.$invalid">
+            Adicionar contato</button>
+        <button class="btn btn-danger btn-block"
+                ng-click="apagarContatos(contatos)" ng-show="isContatoSelecionado(contatos)">
+            Remover contato</button>
+    </div>
+    <!--o '' abaixo serve para escapar o conteúdo e footer não ser interpretado como nome de um atributo do $scope -->
+    <div ng-include="'footer.html'"></div>
+</body>
+</html>
