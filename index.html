@@ -46,14 +46,17 @@
 
     <script>
         angular.module("listaTelefonica", ["ngMessages"]);
-        angular.module("listaTelefonica").controller("listaTelefonicaCtrl", function($scope) {
+        angular.module("listaTelefonica").controller("listaTelefonicaCtrl", function($scope, uppercaseFilter) {
 
             //definindo atributos do escopo desta controller
             $scope.appName="Lista Telefonica";
             $scope.contatos= [
-                {nome:"Pedro", telefone:"9999-9999", data: new Date(), operadora: {nome:"Oi", codigo:14, categoria:"Celular"}, cor:"blue"},
-                {nome:"Ana", telefone:"8888-8888", data: new Date(), operadora: {nome:"Vivo", codigo:15, categoria:"Celular"}, cor:"yellow"},
-                {nome:"Maria", telefone:"7777-7777", data: new Date(), operadora: {nome:"Tim", codigo:41, categoria:"Celular"}, cor:"red"}];
+                {nome: uppercaseFilter("Pedro"), telefone:"9999-9999", data: new Date(),
+                        operadora: {nome:"Oi", codigo:14, categoria:"Celular"}, cor:"blue"},
+                {nome:uppercaseFilter("Ana"), telefone:"8888-8888", data: new Date(),
+                        operadora: {nome:"Vivo", codigo:15, categoria:"Celular"}, cor:"yellow"},
+                {nome:uppercaseFilter("Maria"), telefone:"7777-7777", data: new Date(),
+                        operadora: {nome:"Tim", codigo:41, categoria:"Celular"}, cor:"red"}];
 
             $scope.operadoras = [   {nome:"Oi", codigo:14, categoria:"Celular", preco:2},
                                     {nome:"Vivo", codigo:15, categoria:"Celular", preco:1},
@@ -121,7 +124,7 @@
                 <!-- orderBy tem 3 parâmetros: a entrada do pipe, o criterio de ordenação, a direção da ordenação -->
 
                     <td><input type="checkbox" ng-model="contato.selecionado"/></td>
-                    <td>{{contato.nome | uppercase}}</td>
+                    <td>{{contato.nome}}</td>
                     <td>{{contato.telefone}}</td>
                     <td>{{contato.operadora.nome | lowercase}}</td>
                     <td>{{contato.data | date:"dd/MM/yyyy HH:mm"}}</td>
